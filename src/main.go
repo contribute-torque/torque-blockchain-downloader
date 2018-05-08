@@ -1,9 +1,7 @@
 package main
 
-import (
-	"fmt"
-)
+import "github.com/donovansolms/stellite-blockchain-downloader/src/cmd"
 
 func main() {
-	fmt.Println("Blockchain downloader")
+	cmd.Execute()
 }

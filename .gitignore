@@ -5,6 +5,8 @@
 *.dylib
 bin/
 logs/
+main
+temp/
 
 # Test binary, build with `go test -c`
 *.test
