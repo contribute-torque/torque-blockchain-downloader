@@ -14,6 +14,12 @@
   version = "v1.0"
 
 [[projects]]
+  name = "github.com/mattn/go-runewidth"
+  packages = ["."]
+  revision = "9e777a8366cce605130a531d2cd6363d07ad7317"
+  version = "v0.0.2"
+
+[[projects]]
   name = "github.com/spf13/cobra"
   packages = ["."]
   revision = "a1f051bc3eba734da4772d60e2d677f47cf93ef4"
@@ -25,9 +31,21 @@
   revision = "583c0c0531f06d5278b7d917446061adc344b5cd"
   version = "v1.0.1"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = ["unix"]
+  revision = "7c87d13f8e835d2fb3a70a2912c811ed0c1d241b"
+
+[[projects]]
+  name = "gopkg.in/cheggaaa/pb.v1"
+  packages = ["."]
+  revision = "2af8bbdea9e99e83b3ac400d8f6b6d1b8cbbf338"
+  version = "v1.0.25"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "422d44d59c0bfb4bee82a626a5b96685d1a2f553f7534705e869c176d67f9b87"
+  inputs-digest = "5644c32615d57bd4bd72b13043100037c1f838959f780550e255eeb0314b05be"
   solver-name = "gps-cdcl"
   solver-version = 1
