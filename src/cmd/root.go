@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"crypto/sha512"
 	"encoding/hex"
@@ -61,7 +62,9 @@ not exist in the current directory.
 Please execute this tool from the same path as the 'stellite-blockchain-import'
 tool or set the flag --import-tool-path to the correct location
 `)
-			os.Exit(1)
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
 		}
 
 		// Get the manifest file for the download locations. The manifest file
@@ -70,8 +73,10 @@ tool or set the flag --import-tool-path to the correct location
 		manifest, err := downloader.GetManifest(
 			cmd.Flag("manifest-url").Value.String())
 		if err != nil {
-			fmt.Println("Could not retrieve download manifest:", err)
-			os.Exit(1)
+			fmt.Println("Could not retrieve download manifest, please check your connection:", err)
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
 		}
 
 		// TODO: Check ZeroNet address for JSON manifest file
@@ -83,18 +88,24 @@ tool or set the flag --import-tool-path to the correct location
 		destinationDir, err = filepath.Abs(destinationDir)
 		if err != nil {
 			fmt.Println("Could not determine destination directory:", err)
-			os.Exit(1)
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
 		}
 		fileInfo, err := os.Stat(destinationDir)
 		if err != nil {
 			fmt.Println("Could not read destination directory:", err)
-			os.Exit(1)
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
 		}
 		if fileInfo.IsDir() == false {
 			fmt.Printf(
 				"Destination directory '%s' must be a directory\n",
 				destinationDir)
-			os.Exit(1)
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
 		}
 
 		var downloadHandler downloader.Downloader
@@ -104,6 +115,15 @@ tool or set the flag --import-tool-path to the correct location
 				DownloadSource: manifest.Direct,
 			}
 			fmt.Println("Starting direct download from", manifest.Direct)
+		case "torrent":
+			fmt.Println("Torrent download is not available yet")
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
+		default:
+			fmt.Printf(
+				"Download method '%s' is not a valid method. Available methods are 'direct' and 'torrent'\n",
+				cmd.Flag("method").Value.String())
 		}
 
 		// progressChan receives progress updates from the selected downloader
@@ -125,7 +145,9 @@ tool or set the flag --import-tool-path to the correct location
 		err = downloadHandler.Download(destinationPath, progressChan)
 		if err != nil {
 			fmt.Printf("Download failed: %s\n", err)
-			os.Exit(1)
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
 		}
 		// Just in case the progress bar hasn't updated yet, set to 100%
 		// since we're done
@@ -139,7 +161,9 @@ tool or set the flag --import-tool-path to the correct location
 		verified, err := verifyHash(destinationPath, manifest.Sha512)
 		if err != nil || verified == false {
 			fmt.Printf("Unable to verify downloaded file: %s\n", err)
-			os.Exit(1)
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
 		}
 		fmt.Println("Downloaded file verified using the SHA512 hash")
 
@@ -168,8 +192,7 @@ The location of the downloaded file is:
 		} else {
 			importArgs = append(importArgs, "0")
 		}
-		fmt.Println(cmd.Flag("import-tool-path").Value.String())
-		fmt.Println(strings.Join(importArgs, " "))
+
 		importCommand := exec.Command(
 			cmd.Flag("import-tool-path").Value.String(),
 			importArgs...)
@@ -184,7 +207,9 @@ The location of the downloaded file is:
 		err = importCommand.Start()
 		if err != nil {
 			fmt.Printf("Unable to start the import tool: %s\n", err)
-			os.Exit(1)
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
 		}
 
 		go func() {
@@ -198,13 +223,17 @@ The location of the downloaded file is:
 		err = importCommand.Wait()
 		if err != nil {
 			fmt.Printf("Failed to import the downloaded blockchain: %s\n", err)
-			os.Exit(1)
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
 		}
 		if errStdout != nil || errStderr != nil {
 			fmt.Printf("Unable to capture the import tool's ourput: %s, %s\n",
 				errStdout,
 				errStderr)
-			os.Exit(1)
+			fmt.Print("Press any key to continue...")
+			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+			os.Exit(0)
 		}
 
 		fmt.Printf(`
@@ -221,6 +250,9 @@ You may now start 'stellited' or your wallet.
 Thank you for using the Stellite Blockchain Downloader.
 
 `)
+		fmt.Print("Press any key to continue...")
+		_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+		os.Exit(0)
 	},
 }
 
@@ -255,12 +287,16 @@ func Execute() {
 }
 
 func init() {
+	cobra.MousetrapHelpText = ""
+
 	// Declare err to not shadow workingDir
 	var err error
 	workingDir, err = os.Executable()
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		fmt.Print("Press any key to continue...")
+		_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+		os.Exit(0)
 	}
 	workingDir = filepath.Dir(workingDir)
 
@@ -284,7 +320,7 @@ func init() {
 
 	rootCmd.Flags().String(
 		"manifest-url",
-		"http://stellite.live.local/blockchain-download.manifest",
+		"https://stellite.live/downloads/blockchain-download.manifest",
 		"set the manifest URL")
 
 	rootCmd.Flags().BoolVar(
