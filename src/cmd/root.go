@@ -22,6 +22,7 @@ import (
 // workingDir is the path we're executing from
 var workingDir string
 var downloadOnly bool
+var disableSeed bool
 var verifyImport bool
 
 // rootCmd represents the base command when called without any subcommands
@@ -108,6 +109,7 @@ tool or set the flag --import-tool-path to the correct location
 			os.Exit(0)
 		}
 
+		// Set up the download method
 		var downloadHandler downloader.Downloader
 		switch strings.ToLower(cmd.Flag("method").Value.String()) {
 		case "direct":
@@ -116,10 +118,15 @@ tool or set the flag --import-tool-path to the correct location
 			}
 			fmt.Println("Starting direct download from", manifest.Direct)
 		case "torrent":
-			fmt.Println("Torrent download is not available yet")
-			fmt.Print("Press any key to continue...")
-			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
-			os.Exit(0)
+			downloadHandler = downloader.Torrent{
+				DownloadSource: manifest.Magnet,
+				AllowSeed:      !disableSeed,
+			}
+			fmt.Printf("Starting torrent download from %s ", manifest.Magnet)
+			if disableSeed {
+				fmt.Printf("- not seeding")
+			}
+			fmt.Printf("\n")
 		default:
 			fmt.Printf(
 				"Download method '%s' is not a valid method. Available methods are 'direct' and 'torrent'\n",
@@ -315,12 +322,12 @@ func init() {
 	rootCmd.Flags().StringP(
 		"method",
 		"m",
-		"direct",
+		"torrent",
 		"set the download method. Available 'direct' or 'torrent'")
 
 	rootCmd.Flags().String(
 		"manifest-url",
-		"https://stellite.live/downloads/blockchain-download.manifest",
+		"http://stellite.live.local/blockchain-download.manifest",
 		"set the manifest URL")
 
 	rootCmd.Flags().BoolVar(
@@ -328,6 +335,12 @@ func init() {
 		"with-import-verification",
 		false,
 		"if --verify 1 should be used on import")
+
+	rootCmd.Flags().BoolVar(
+		&disableSeed,
+		"disable-seed",
+		false,
+		"if we are allowed to seed the torrent while downloading")
 
 	importToolPAth := filepath.Join(workingDir, "stellite-blockchain-import")
 	if runtime.GOOS == "windows" {
