@@ -24,6 +24,7 @@ var workingDir string
 var downloadOnly bool
 var disableSeed bool
 var verifyImport bool
+var forceCleanImport bool
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
@@ -51,21 +52,23 @@ The tool supports the following download methods:
 		// Clear all the spaces
 		fmt.Println("")
 
-		// We need to check if the 'stellite-blockchain-import' tool
-		// is available before doing anything else
-		// The tool has a well known name, so just check for that
-		_, err := os.Stat(filepath.Join(cmd.Flag("import-tool-path").Value.String()))
-		if os.IsNotExist(err) {
-			fmt.Printf(`
+		if downloadOnly == false {
+			// We need to check if the 'stellite-blockchain-import' tool
+			// is available before doing anything else
+			// The tool has a well known name, so just check for that
+			_, err := os.Stat(filepath.Join(cmd.Flag("import-tool-path").Value.String()))
+			if os.IsNotExist(err) {
+				fmt.Printf(`
 The blockchain import tool 'stellite-blockchain-import' does
 not exist in the current directory.
 
 Please execute this tool from the same path as the 'stellite-blockchain-import'
 tool or set the flag --import-tool-path to the correct location
 `)
-			fmt.Print("Press any key to continue...")
-			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
-			os.Exit(0)
+				fmt.Print("Press any key to continue...")
+				_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+				os.Exit(0)
+			}
 		}
 
 		// Get the manifest file for the download locations. The manifest file
@@ -83,6 +86,7 @@ tool or set the flag --import-tool-path to the correct location
 		// TODO: Check ZeroNet address for JSON manifest file
 		// The manifest file contains the torrent magnet link, the direct download
 		// address, a SHA512 hash of the file and the block number
+		// For now we're just using a JSON file on stellite.live
 
 		// Check if the selected download path exists and is a directory
 		destinationDir := cmd.Flag("destination-dir").Value.String()
@@ -193,6 +197,10 @@ The location of the downloaded file is:
 			"--input-file",
 			destinationPath,
 		}
+		if forceCleanImport {
+			importArgs = append(importArgs, "--resume")
+			importArgs = append(importArgs, "0")
+		}
 		importArgs = append(importArgs, "--verify")
 		if verifyImport {
 			importArgs = append(importArgs, "1")
@@ -241,6 +249,14 @@ The location of the downloaded file is:
 			fmt.Print("Press any key to continue...")
 			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 			os.Exit(0)
+		}
+
+		err = os.Remove(destinationPath)
+		if err != nil {
+			fmt.Printf("The downloaded file '%s' could not be removed: %s\n",
+				destinationPath,
+				err,
+			)
 		}
 
 		fmt.Printf(`
@@ -327,7 +343,7 @@ func init() {
 
 	rootCmd.Flags().String(
 		"manifest-url",
-		"http://stellite.live.local/blockchain-download.manifest",
+		"https://stellite.live/downloads/blockchain-download.manifest",
 		"set the manifest URL")
 
 	rootCmd.Flags().BoolVar(
@@ -341,6 +357,12 @@ func init() {
 		"disable-seed",
 		false,
 		"if we are allowed to seed the torrent while downloading")
+
+	rootCmd.Flags().BoolVar(
+		&forceCleanImport,
+		"force",
+		false,
+		"if we should overwrite the current chain")
 
 	importToolPAth := filepath.Join(workingDir, "stellite-blockchain-import")
 	if runtime.GOOS == "windows" {

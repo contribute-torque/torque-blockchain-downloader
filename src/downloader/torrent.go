@@ -22,7 +22,8 @@ func (dl Torrent) Download(
 
 	defer close(progressChan)
 	client, err := torrent.NewClient(&torrent.Config{
-		Seed: dl.AllowSeed,
+		Seed:        dl.AllowSeed,
+		DisableIPv6: true,
 	})
 	if err != nil {
 		return err
@@ -34,7 +35,6 @@ func (dl Torrent) Download(
 		return err
 	}
 	<-tor.GotInfo()
-
 	torInfo := tor.Info()
 	reader := tor.NewReader()
 	tor.DownloadAll()
