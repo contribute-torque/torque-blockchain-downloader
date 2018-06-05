@@ -15,28 +15,46 @@ import (
 	"strings"
 
 	"github.com/donovansolms/stellite-blockchain-downloader/src/downloader"
+	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
 // workingDir is the path we're executing from
 var workingDir string
+
+// downloadOnly is the flag to only download the file
 var downloadOnly bool
+
+// disableSeed blocks torrents from seeding while downloading
 var disableSeed bool
+
+// verifyImport when set to true will verify the blockchain import
 var verifyImport bool
+
+// forceCleanImport will remove the current blockchain before importing
 var forceCleanImport bool
+
+// defaultBlockchainDirectory holds the default location of the blockchain
+var defaultBlockchainDirectory string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
 	Use:   "stellite-blockchain-downloader",
 	Short: "Stellite blockchain download and importer",
 	Long: `
+  __ _____ ___ _   _   _ _____ ___
+/' _/_   _| __| | | | | |_   _| __|
+'._'. | | | _|| |_| |_| | | | | _|
+|___/ |_| |___|___|___|_| |_| |___|
+                  BLOCKCHAIN DOWNLOADER
+
 stellite-blockchain-downloader downloads the latest available blockchain
 export and imports it using the 'stellite-blockchain-import' tool.
 
 The tool supports the following download methods:
-1. Direct HTTP/HTTPS
-2. Torrent`,
+1. Torrent
+2. Direct over HTTPS`,
 
 	// By default the root command executes a download and import of the
 	// latest blockchain file
@@ -65,7 +83,7 @@ not exist in the current directory.
 Please execute this tool from the same path as the 'stellite-blockchain-import'
 tool or set the flag --import-tool-path to the correct location
 `)
-				fmt.Print("Press any key to continue...")
+				fmt.Print("Press enter to continue...")
 				_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 				os.Exit(0)
 			}
@@ -78,7 +96,7 @@ tool or set the flag --import-tool-path to the correct location
 			cmd.Flag("manifest-url").Value.String())
 		if err != nil {
 			fmt.Println("Could not retrieve download manifest, please check your connection:", err)
-			fmt.Print("Press any key to continue...")
+			fmt.Print("Press enter to continue...")
 			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 			os.Exit(0)
 		}
@@ -93,14 +111,14 @@ tool or set the flag --import-tool-path to the correct location
 		destinationDir, err = filepath.Abs(destinationDir)
 		if err != nil {
 			fmt.Println("Could not determine destination directory:", err)
-			fmt.Print("Press any key to continue...")
+			fmt.Print("Press enter to continue...")
 			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 			os.Exit(0)
 		}
 		fileInfo, err := os.Stat(destinationDir)
 		if err != nil {
 			fmt.Println("Could not read destination directory:", err)
-			fmt.Print("Press any key to continue...")
+			fmt.Print("Press enter to continue...")
 			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 			os.Exit(0)
 		}
@@ -108,7 +126,7 @@ tool or set the flag --import-tool-path to the correct location
 			fmt.Printf(
 				"Destination directory '%s' must be a directory\n",
 				destinationDir)
-			fmt.Print("Press any key to continue...")
+			fmt.Print("Press enter to continue...")
 			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 			os.Exit(0)
 		}
@@ -156,7 +174,7 @@ tool or set the flag --import-tool-path to the correct location
 		err = downloadHandler.Download(destinationPath, progressChan)
 		if err != nil {
 			fmt.Printf("Download failed: %s\n", err)
-			fmt.Print("Press any key to continue...")
+			fmt.Print("Press enter to continue...")
 			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 			os.Exit(0)
 		}
@@ -172,7 +190,7 @@ tool or set the flag --import-tool-path to the correct location
 		verified, err := verifyHash(destinationPath, manifest.Sha512)
 		if err != nil || verified == false {
 			fmt.Printf("Unable to verify downloaded file: %s\n", err)
-			fmt.Print("Press any key to continue...")
+			fmt.Print("Press enter to continue...")
 			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 			os.Exit(0)
 		}
@@ -197,15 +215,35 @@ The location of the downloaded file is:
 			"--input-file",
 			destinationPath,
 		}
-		if forceCleanImport {
-			importArgs = append(importArgs, "--resume")
-			importArgs = append(importArgs, "0")
-		}
 		importArgs = append(importArgs, "--verify")
 		if verifyImport {
 			importArgs = append(importArgs, "1")
 		} else {
 			importArgs = append(importArgs, "0")
+		}
+
+		// data-dir specifies the wanted blockchain directory
+		if cmd.Flag("data-dir").Value.String() != "" {
+
+			importArgs = append(importArgs, "--data-dir")
+			importArgs = append(importArgs, cmd.Flag("data-dir").Value.String())
+
+			if forceCleanImport {
+				_, err := os.Stat(cmd.Flag("data-dir").Value.String())
+				if os.IsNotExist(err) {
+					fmt.Println("The specified --data-dir does not exist and will not be deleted")
+				} else {
+					err = os.RemoveAll(cmd.Flag("data-dir").Value.String())
+					if err != nil {
+						fmt.Printf(`
+		The specified blockchain path could not be removed due to an error. Please
+		see the error below:
+		`)
+						fmt.Println(err)
+						os.Exit(0)
+					}
+				}
+			}
 		}
 
 		importCommand := exec.Command(
@@ -222,7 +260,7 @@ The location of the downloaded file is:
 		err = importCommand.Start()
 		if err != nil {
 			fmt.Printf("Unable to start the import tool: %s\n", err)
-			fmt.Print("Press any key to continue...")
+			fmt.Print("Press enter to continue...")
 			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 			os.Exit(0)
 		}
@@ -238,15 +276,15 @@ The location of the downloaded file is:
 		err = importCommand.Wait()
 		if err != nil {
 			fmt.Printf("Failed to import the downloaded blockchain: %s\n", err)
-			fmt.Print("Press any key to continue...")
+			fmt.Print("Press enter to continue...")
 			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 			os.Exit(0)
 		}
 		if errStdout != nil || errStderr != nil {
-			fmt.Printf("Unable to capture the import tool's ourput: %s, %s\n",
+			fmt.Printf("Unable to capture the import tool's output: %s, %s\n",
 				errStdout,
 				errStderr)
-			fmt.Print("Press any key to continue...")
+			fmt.Print("Press enter to continue...")
 			_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 			os.Exit(0)
 		}
@@ -273,7 +311,7 @@ You may now start 'stellited' or your wallet.
 Thank you for using the Stellite Blockchain Downloader.
 
 `)
-		fmt.Print("Press any key to continue...")
+		fmt.Print("Press enter to continue...")
 		_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 		os.Exit(0)
 	},
@@ -317,11 +355,40 @@ func init() {
 	workingDir, err = os.Executable()
 	if err != nil {
 		fmt.Println(err)
-		fmt.Print("Press any key to continue...")
+		fmt.Print("Press enter to continue...")
 		_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
 		os.Exit(0)
 	}
 	workingDir = filepath.Dir(workingDir)
+
+	// Get the defaul blockchain directory
+	defaultBlockchainDirectory, err = homedir.Dir()
+	if err != nil {
+		fmt.Println(err)
+		fmt.Print("Press enter to continue...")
+		_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+		os.Exit(0)
+	}
+
+	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
+		defaultBlockchainDirectory = filepath.Join(
+			defaultBlockchainDirectory,
+			".stellite",
+		)
+	} else if runtime.GOOS == "windows" {
+		defaultBlockchainDirectory = "C:\\ProgramData\\stellite"
+	}
+
+	if defaultBlockchainDirectory == "" {
+		fmt.Printf(`
+Could not determine the default location of the blockchain,
+please use the --data-dir flag to specify the location
+
+`)
+		fmt.Print("Press enter to continue...")
+		_, _ = bufio.NewReader(os.Stdin).ReadBytes('\n')
+		os.Exit(0)
+	}
 
 	rootCmd.Flags().BoolVar(
 		&downloadOnly,
@@ -346,11 +413,16 @@ func init() {
 		"https://stellite.live/downloads/blockchain-download.manifest",
 		"set the manifest URL")
 
+	rootCmd.Flags().String(
+		"data-dir",
+		defaultBlockchainDirectory,
+		"set a custom blockchain path")
+
 	rootCmd.Flags().BoolVar(
 		&verifyImport,
 		"with-import-verification",
 		false,
-		"if --verify 1 should be used on import")
+		"if --verify 1 should be used on import (safer, but much slower)")
 
 	rootCmd.Flags().BoolVar(
 		&disableSeed,
@@ -362,14 +434,14 @@ func init() {
 		&forceCleanImport,
 		"force",
 		false,
-		"if we should overwrite the current chain")
+		"if we should remove the current chain")
 
-	importToolPAth := filepath.Join(workingDir, "stellite-blockchain-import")
+	importToolPath := filepath.Join(workingDir, "stellite-blockchain-import")
 	if runtime.GOOS == "windows" {
-		importToolPAth = filepath.Join(workingDir, "stellite-blockchain-import.exe")
+		importToolPath = filepath.Join(workingDir, "stellite-blockchain-import.exe")
 	}
 	rootCmd.Flags().String(
 		"import-tool-path",
-		importToolPAth,
+		importToolPath,
 		"set the path to the import tool")
 }

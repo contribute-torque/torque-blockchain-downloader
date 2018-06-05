@@ -44,3 +44,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/anacrolix/torrent"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/mitchellh/go-homedir"
