@@ -9,16 +9,16 @@ torrent for faster downloads, direct HTTPS download is also provided as failover
 
 ```
 Flags:
-      --data-dir string            set a custom blockchain path
-  -d, --destination-dir string     directory to download to
-      --disable-seed               if we are allowed to seed the torrent while downloading
-      --download-only              download the blockchain but don't import
-      --force                      if we should remove the current chain
-  -h, --help                       help for stellite-blockchain-downloader
-      --import-tool-path string    set the path to the import tool if in other location
-      --manifest-url string        set the manifest URL
-  -m, --method string              set the download method. Available 'direct' or 'torrent' (default "torrent")
-      --with-import-verification   if --verify 1 should be used on import (safer, but much slower)
+      --data-dir string               set a custom blockchain path
+  -d, --destination-dir string        directory to download to
+      --disable-seed                  if we are allowed to seed the torrent while downloading
+      --download-only                 download the blockchain but don't import
+      --force                         if we should remove the current chain
+  -h, --help                          help for stellite-blockchain-downloader
+      --import-tool-path string       set the path to the import tool if in other location
+      --manifest-url string           set the manifest URL
+  -m, --method string                 set the download method. Available 'direct' or 'torrent' (default "torrent")
+      --without-import-verification   if --dangerous-unverified-import 1 should be used on import (less safe, but much faster)
 ```
 
 ## Common uses
