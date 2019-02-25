@@ -7,13 +7,14 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"gx/ipfs/QmPtj12fdwuAqj9sBSTNUxBNu8kCGNp8b3o8yUzMm5GHpq/pb"
 	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+
+	"gopkg.in/cheggaaa/pb.v1"
 
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"

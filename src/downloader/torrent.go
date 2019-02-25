@@ -21,10 +21,11 @@ func (dl Torrent) Download(
 	progressChan chan Progress) error {
 
 	defer close(progressChan)
-	client, err := torrent.NewClient(&torrent.ClientConfig{
-		Seed: dl.AllowSeed,
-		// DisableIPv6: true,
-	})
+	clientConfig := torrent.NewDefaultClientConfig()
+	clientConfig.Seed = dl.AllowSeed
+	clientConfig.DisableIPv6 = true
+	clientConfig.Debug = false
+	client, err := torrent.NewClient(clientConfig)
 	if err != nil {
 		return err
 	}
