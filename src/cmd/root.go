@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"gx/ipfs/QmPtj12fdwuAqj9sBSTNUxBNu8kCGNp8b3o8yUzMm5GHpq/pb"
 	"io"
 	"os"
 	"os/exec"
@@ -14,10 +15,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/donovansolms/stellite-blockchain-downloader/src/downloader"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"gopkg.in/cheggaaa/pb.v1"
+	"github.com/stellitecoin/stellite-blockchain-downloader/src/downloader"
 )
 
 // workingDir is the path we're executing from
@@ -29,8 +29,8 @@ var downloadOnly bool
 // disableSeed blocks torrents from seeding while downloading
 var disableSeed bool
 
-// verifyImport when set to true will verify the blockchain import
-var verifyImport bool
+// noVerifyImport when set to true will NOT verify the blockchain import
+var noVerifyImport bool
 
 // forceCleanImport will remove the current blockchain before importing
 var forceCleanImport bool
@@ -215,8 +215,8 @@ The location of the downloaded file is:
 			"--input-file",
 			destinationPath,
 		}
-		importArgs = append(importArgs, "--verify")
-		if verifyImport {
+		importArgs = append(importArgs, "--dangerous-unverified-import")
+		if noVerifyImport {
 			importArgs = append(importArgs, "1")
 		} else {
 			importArgs = append(importArgs, "0")
@@ -419,10 +419,10 @@ please use the --data-dir flag to specify the location
 		"set a custom blockchain path")
 
 	rootCmd.Flags().BoolVar(
-		&verifyImport,
-		"with-import-verification",
+		&noVerifyImport,
+		"without-import-verification",
 		false,
-		"if --verify 1 should be used on import (safer, but much slower)")
+		"if --dangerous-unverified-import 0 should be used on import (less safe, but much faster)")
 
 	rootCmd.Flags().BoolVar(
 		&disableSeed,
