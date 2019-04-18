@@ -1,6 +1,6 @@
 package main
 
-import "github.com/stellitecoin/stellite-blockchain-downloader/src/cmd"
+import "github.com/contribute-torque/torque-blockchain-downloader/src/cmd"
 
 func main() {
 	cmd.Execute()

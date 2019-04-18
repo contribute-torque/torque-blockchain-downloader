@@ -14,11 +14,11 @@ import (
 	"runtime"
 	"strings"
 
-	"gopkg.in/cheggaaa/pb.v1"
+	pb "gopkg.in/cheggaaa/pb.v1"
 
+	"github.com/contribute-torque/torque-blockchain-downloader/src/downloader"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/spf13/cobra"
-	"github.com/stellitecoin/stellite-blockchain-downloader/src/downloader"
 )
 
 // workingDir is the path we're executing from
@@ -41,17 +41,17 @@ var defaultBlockchainDirectory string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "stellite-blockchain-downloader",
-	Short: "Stellite blockchain download and importer",
+	Use:   "torque-blockchain-downloader",
+	Short: "Torque blockchain download and importer",
 	Long: `
-  __ _____ ___ _   _   _ _____ ___
-/' _/_   _| __| | | | | |_   _| __|
-'._'. | | | _|| |_| |_| | | | | _|
-|___/ |_| |___|___|___|_| |_| |___|
+ _____ ___  ___  ___  _   _ ___
+|_   _/ _ \| _ \/ _ \| | | | __|
+  | || (_) |   / (_) | |_| | _|
+  |_| \___/|_|_\\__\_\\___/|___|
                   BLOCKCHAIN DOWNLOADER
 
-stellite-blockchain-downloader downloads the latest available blockchain
-export and imports it using the 'stellite-blockchain-import' tool.
+torque-blockchain-downloader downloads the latest available blockchain
+export and imports it using the 'torque-blockchain-import' tool.
 
 The tool supports the following download methods:
 1. Torrent
@@ -62,26 +62,26 @@ The tool supports the following download methods:
 	Run: func(cmd *cobra.Command, args []string) {
 
 		fmt.Printf(`
-  __ _____ ___ _   _   _ _____ ___
-/' _/_   _| __| | | | | |_   _| __|
-'._'. | | | _|| |_| |_| | | | | _|
-|___/ |_| |___|___|___|_| |_| |___|
+ _____ ___  ___  ___  _   _ ___
+|_   _/ _ \| _ \/ _ \| | | | __|
+  | || (_) |   / (_) | |_| | _|
+  |_| \___/|_|_\\__\_\\___/|___|
                   BLOCKCHAIN DOWNLOADER
 			`)
 		// Clear all the spaces
 		fmt.Println("")
 
 		if downloadOnly == false {
-			// We need to check if the 'stellite-blockchain-import' tool
+			// We need to check if the 'torque-blockchain-import' tool
 			// is available before doing anything else
 			// The tool has a well known name, so just check for that
 			_, err := os.Stat(filepath.Join(cmd.Flag("import-tool-path").Value.String()))
 			if os.IsNotExist(err) {
 				fmt.Printf(`
-The blockchain import tool 'stellite-blockchain-import' does
+The blockchain import tool 'torque-blockchain-import' does
 not exist in the current directory.
 
-Please execute this tool from the same path as the 'stellite-blockchain-import'
+Please execute this tool from the same path as the 'torque-blockchain-import'
 tool or set the flag --import-tool-path to the correct location
 `)
 				fmt.Print("Press enter to continue...")
@@ -105,7 +105,7 @@ tool or set the flag --import-tool-path to the correct location
 		// TODO: Check ZeroNet address for JSON manifest file
 		// The manifest file contains the torrent magnet link, the direct download
 		// address, a SHA512 hash of the file and the block number
-		// For now we're just using a JSON file on stellite.live
+		// For now we're just using a JSON file on live.torque.cash
 
 		// Check if the selected download path exists and is a directory
 		destinationDir := cmd.Flag("destination-dir").Value.String()
@@ -171,7 +171,7 @@ tool or set the flag --import-tool-path to the correct location
 		}()
 
 		// Create a definitive download location to use for the import
-		destinationPath := filepath.Join(destinationDir, "stellite-blockchain.raw")
+		destinationPath := filepath.Join(destinationDir, "torque-blockchain.raw")
 		err = downloadHandler.Download(destinationPath, progressChan)
 		if err != nil {
 			fmt.Printf("Download failed: %s\n", err)
@@ -210,7 +210,7 @@ The location of the downloaded file is:
 
 		fmt.Println("Importing downloaded blockchain file...")
 
-		// Import the blockchain file by executing the 'stellite-blockchain-import'
+		// Import the blockchain file by executing the 'torque-blockchain-import'
 		// tool and print the output of the tool as we continue
 		importArgs := []string{
 			"--input-file",
@@ -299,17 +299,17 @@ The location of the downloaded file is:
 		}
 
 		fmt.Printf(`
-  __ _____ ___ _   _   _ _____ ___
-/' _/_   _| __| | | | | |_   _| __|
-'._'. | | | _|| |_| |_| | | | | _|
-|___/ |_| |___|___|___|_| |_| |___|
+ _____ ___  ___  ___  _   _ ___
+|_   _/ _ \| _ \/ _ \| | | | __|
+  | || (_) |   / (_) | |_| | _|
+  |_| \___/|_|_\\__\_\\___/|___|
                   BLOCKCHAIN DOWNLOADER
 			`)
 		fmt.Printf(`
 Imported downloaded blockchain file successfully.
-You may now start 'stellited' or your wallet.
+You may now start 'torqued' or your wallet.
 
-Thank you for using the Stellite Blockchain Downloader.
+Thank you for using the Torque Blockchain Downloader.
 
 `)
 		fmt.Print("Press enter to continue...")
@@ -374,10 +374,10 @@ func init() {
 	if runtime.GOOS == "linux" || runtime.GOOS == "darwin" {
 		defaultBlockchainDirectory = filepath.Join(
 			defaultBlockchainDirectory,
-			".stellite",
+			".torque",
 		)
 	} else if runtime.GOOS == "windows" {
-		defaultBlockchainDirectory = "C:\\ProgramData\\stellite"
+		defaultBlockchainDirectory = "C:\\ProgramData\\torque"
 	}
 
 	if defaultBlockchainDirectory == "" {
@@ -437,9 +437,9 @@ please use the --data-dir flag to specify the location
 		false,
 		"if we should remove the current chain")
 
-	importToolPath := filepath.Join(workingDir, "stellite-blockchain-import")
+	importToolPath := filepath.Join(workingDir, "torque-blockchain-import")
 	if runtime.GOOS == "windows" {
-		importToolPath = filepath.Join(workingDir, "stellite-blockchain-import.exe")
+		importToolPath = filepath.Join(workingDir, "torque-blockchain-import.exe")
 	}
 	rootCmd.Flags().String(
 		"import-tool-path",

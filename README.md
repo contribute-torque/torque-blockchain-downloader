@@ -1,11 +1,11 @@
-# Stellite Blockchain Downloader
+# Torque Blockchain Downloader
 
-A simple tool to download and import the latest Stellite blockchain file. It uses a
+A simple tool to download and import the latest Torque blockchain file. It uses a
 torrent for faster downloads, direct HTTPS download is also provided as failover.
 
 ## Available commands
 
-`./stellite-blockchain-downloader --help`
+`./torque-blockchain-downloader --help`
 
 ```
 Flags:
@@ -14,7 +14,7 @@ Flags:
       --disable-seed                  if we are allowed to seed the torrent while downloading
       --download-only                 download the blockchain but don't import
       --force                         if we should remove the current chain
-  -h, --help                          help for stellite-blockchain-downloader
+  -h, --help                          help for torque-blockchain-downloader
       --import-tool-path string       set the path to the import tool if in other location
       --manifest-url string           set the manifest URL
   -m, --method string                 set the download method. Available 'direct' or 'torrent' (default "torrent")
@@ -25,23 +25,23 @@ Flags:
 
 * To download and import the blockchain on first start
 
-```./stellite-blockchain-downloader```
+```./torque-blockchain-downloader```
 
 * To download and import the blockchain and overwrite your current one
 
-```./stellite-blockchain-downloader --force```
+```./torque-blockchain-downloader --force```
 
 * To download and import the blockchain if you store your blockchain somewhere else than the default
 
-```./stellite-blockchain-downloader --data-dir /path/to/stellite```
+```./torque-blockchain-downloader --data-dir /path/to/torque```
 
 * To download, import the blockchain and overwrite the current blockchain if you store your blockchain somewhere else than the default
 
-```./stellite-blockchain-downloader --data-dir /path/to/stellite --force```
+```./torque-blockchain-downloader --data-dir /path/to/torque --force```
 
 * To download and import the blockchain if torrents are blocked by your provider
 
-```./stellite-blockchain-downloader --method direct```
+```./torque-blockchain-downloader --method direct```
 
 
 ## Compiling
@@ -61,8 +61,8 @@ https://golang.github.io/dep/docs/installation.html
 * Clone the repository
 
 ```
-git clone https://github.com/stellitecoin/stellite-blockchain-downloader.git
-cd stellite-blockchain-downloader
+git clone https://github.com/contribute-torque/torque-blockchain-downloader.git
+cd torque-blockchain-downloader
 ```
 
 * Pull dependencies
@@ -80,5 +80,5 @@ make
 * Or only build for your platform
 
 ```
-go build -o stellite-blockchain-downloader src/main.go
+go build -o torque-blockchain-downloader src/main.go
 ```
